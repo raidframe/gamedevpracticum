@@ -3,7 +3,7 @@
 ## Результат
 
 - `ArtSource/PC_PSX_Repairable/PC_PSX_Repairable.blend` — редактируемая модель с закрытой крышкой и упакованной текстурой.
-- `Assets/models/Pc case/repairable/PC_PSX_Repairable.fbx` — экспорт для Unity без камер и света; рядом атлас и `.meta`.
+- `Assets/Art/Models/Cases/RepairableBlueFlame/PC_PSX_Repairable.fbx` — экспорт для Unity без камер и света; рядом атлас и `.meta`.
 - `ArtSource/PC_PSX_Repairable/closed.png` и `open.png` — проверочные рендеры.
 - `ArtSource/PC_PSX_Repairable/validation.json` — результаты проверок.
 
@@ -38,7 +38,5 @@
 - Визуально проверены рендеры закрытого и открытого корпуса.
 - Повторно открыт сохранённый blend: крышка закрыта, отверстие свободно, текстура упакована.
 - FBX импортирован в чистый Blender: габариты, 23 mesh-объекта, текстура и связь крышки с решёткой сохранены; камер и света нет.
-
-`Tools/build_repairable_case.py` воспроизводит сборку через Blender; `Tools/validate_repairable_case.py` проверяет результат. Используй аргументы `--background --factory-startup --python-exit-code 1 --python <путь>`. Сборщик перезаписывает производные файлы новой версии, поэтому не запускай его поверх ручных правок новой модели.
 
 Предложение для коммита: `Add repairable PC case with removable side panel and internal frame`.

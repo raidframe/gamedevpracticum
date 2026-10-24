@@ -12,8 +12,8 @@
     "Mount_Drive"
   ],
   "side_panel_faces_in_original": 2,
-  "output_blend": "C:\\Users\\firam\\gamedevpracticum\\ArtSource\\PC_PSX_Repairable\\PC_PSX_Repairable.blend",
-  "output_fbx": "C:\\Users\\firam\\gamedevpracticum\\Assets\\models\\Pc case\\repairable\\PC_PSX_Repairable.fbx",
+  "output_blend": "ArtSource/PC_PSX_Repairable/PC_PSX_Repairable.blend",
+  "output_fbx": "Assets/Art/Models/Cases/RepairableBlueFlame/PC_PSX_Repairable.fbx",
   "fbx_roundtrip_passed": true,
   "fbx_dimensions_metres": [
     0.20000000298023224,
