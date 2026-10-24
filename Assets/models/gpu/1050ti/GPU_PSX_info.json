@@ -1,0 +1,15 @@
+{
+  "triangles": 456,
+  "vertices": 368,
+  "mesh_objects": 1,
+  "texture_size": [
+    1254,
+    1254
+  ],
+  "texture_packed": true,
+  "dimensions_mm": [
+    275.0,
+    166.0,
+    42.5
+  ]
+}

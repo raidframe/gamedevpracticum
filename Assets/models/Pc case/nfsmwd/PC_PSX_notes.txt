@@ -1,0 +1,20 @@
+КОРПУС ПК В СТИЛЕ PSX
+
+PC_PSX.blend — основной файл Blender 4.5+.
+PC_PSX.glb — переносимый вариант с встроенной текстурой.
+PC_PSX_atlas.png — текстурный атлас, созданный по фотографии.
+PC_PSX_preview.png / PC_PSX_back_preview.png — превью с двух сторон.
+
+412 треугольников; один редактируемый mesh; UV-развёртка.
+Текстура упакована в .blend и .glb. Фильтрация Closest сохраняет пиксели.
+Коллекция Studio содержит только камеры и свет.
+В Blender для отображения текстуры: Material Preview, Z → M.
+Задняя и правая стороны придуманы в том же стиле: на референсе их не видно.
+Это стилизация под PSX, а не файл для запуска на оригинальной консоли.
+
+ТЕКСТУРА
+Создана встроенным инструментом image_gen; исходная фотография использована
+как визуальный референс. UV-развёртка подогнана под фактическую раскладку атласа.
+
+Итоговый промпт генерации:
+Create a production-ready UV TEXTURE ATLAS for a low-poly PS1 / PSX era 3D PC tower case, using the attached photograph ONLY as a design reference. Not a 3D render and not the photo. Output a square flat orthographic 1024x1024 bitmap with visibly chunky authentic low-res pixel art (approx 256x256 effective detail), limited 32-color muted palette, crisp pixel edges, restrained dithering, baked subtle grime. Ivory silver grey early 2000s tower with vivid deep cobalt blue / violet tribal racing flames, like the reference. No perspective, no room, no computer monitor, no watermark, no labels outside object surfaces. Every region must be FULL BLEED to exact rectangular boundaries; all 6 regions together fill the entire square without gaps or borders. EXACT ATLAS LAYOUT: upper-left quarter x0-511 y0-511: entire LEFT SIDE metal panel, square, large blue curved forked tribal flames diagonally rising from bottom RIGHT toward upper LEFT, small dark circular wire fan grille centered at (255,285) within this quarter. Lower-left quarter x0-511 y512-1023: RIGHT SIDE panel, same ivory metal with simpler matching blue flames along bottom, screws in corners, no fan. Upper middle rectangle x512-767 y0-511: FRONT panel, tall narrow 1:2 rectangle, ivory plastic, three horizontal 5.25-inch drive bays at top, first two optical drives with dark thin tray slots and tiny eject buttons, one floppy drive halfway down, small round power button below it, bottom third has cobalt blue flames and a dark round fan grille centered horizontally near y422, grille diameter80px. Upper-right rectangle x768-1023 y0-511: BACK panel, tall 1:2, dull grey metal, PSU grill and black AC socket in upper third, small old serial/USB/PS2 motherboard connectors at middle left, 6 horizontal expansion-slot grills at bottom. Lower middle rectangle x512-767 y512-1023: TOP panel, tall 1:2 rectangle of ivory silver grey metal with only a circular chrome wire fan grille centered at (640,700), diameter90px. Lower-right rectangle x768-1023 y512-1023: BOTTOM panel, tall 1:2 rectangle of plain dark grey metal with subtle vents and four dark small rubber feet corner marks. Keep all panel edges straight, no rounded corners or transparent margins. The top, side, front, back should each be perfectly flat texture planes. Strong authentic low-resolution PSX pixel texture aesthetic, not smooth modern realistic CGI.

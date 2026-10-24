@@ -1,0 +1,16 @@
+{
+  "triangles": 784,
+  "vertices": 484,
+  "mesh_objects": 1,
+  "texture_size": [
+    1254,
+    1254
+  ],
+  "texture_packed": true,
+  "window_details": "baked texture",
+  "dimensions_cm": [
+    25.0,
+    49.35,
+    51.55
+  ]
+}

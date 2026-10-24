@@ -1,0 +1,26 @@
+{
+  "source_sha256": "3593e7b05ee641eb24ce73ac483033a116131bca978526de573392da62b0d8f3",
+  "source_unchanged": true,
+  "mesh_objects": 23,
+  "triangles": 716,
+  "mounts": [
+    "Mount_Motherboard",
+    "Mount_PSU",
+    "Mount_GPU",
+    "Mount_RAM_A",
+    "Mount_RAM_B",
+    "Mount_Drive"
+  ],
+  "side_panel_faces_in_original": 2,
+  "output_blend": "C:\\Users\\firam\\gamedevpracticum\\ArtSource\\PC_PSX_Repairable\\PC_PSX_Repairable.blend",
+  "output_fbx": "C:\\Users\\firam\\gamedevpracticum\\Assets\\models\\Pc case\\repairable\\PC_PSX_Repairable.fbx",
+  "fbx_roundtrip_passed": true,
+  "fbx_dimensions_metres": [
+    0.20000000298023224,
+    0.44300007820129395,
+    0.45900005510675257
+  ],
+  "closed_panel_verified": true,
+  "opening_verified": true,
+  "packed_atlas_verified": true
+}

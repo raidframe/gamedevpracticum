@@ -1,0 +1,16 @@
+{
+  "triangles": 412,
+  "vertices": 264,
+  "mesh_objects": 1,
+  "texture_size": [
+    1254,
+    1254
+  ],
+  "texture_packed": true,
+  "style": "PSX-inspired",
+  "dimensions_cm": [
+    20.0,
+    44.3,
+    45.9
+  ]
+}

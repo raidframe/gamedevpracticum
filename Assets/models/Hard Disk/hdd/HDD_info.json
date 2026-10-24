@@ -1,0 +1,16 @@
+{
+  "triangles": 100,
+  "vertices": 56,
+  "mesh_objects": 1,
+  "interior_components": 0,
+  "texture_size": [
+    1254,
+    1254
+  ],
+  "texture_packed": true,
+  "dimensions_mm": [
+    101.6,
+    147.5,
+    26.1
+  ]
+}

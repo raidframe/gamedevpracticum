@@ -1,0 +1,20 @@
+КОРПУС HOTROD PC — PSX
+
+Hotrod_PC_PSX.blend — основной файл Blender 4.5+.
+Hotrod_PC_PSX.glb — переносимая модель со встроенной текстурой.
+Hotrod_PSX_atlas.png — текстурный атлас.
+Hotrod_PSX_preview.png / Hotrod_PSX_back_preview.png — превью.
+
+UV-развёртка, треугольная геометрия, плоское затенение и пиксельная текстура.
+В Blender включите Material Preview (Z → M), чтобы видеть текстуру.
+Текстура встроена в .blend и .glb. Коллекция Studio — только камеры и свет.
+Окно, трубки и детали за стеклом нарисованы в текстуре; сложной внутренней геометрии нет.
+Стороны, которых не видно на фотографии, дополнены в том же стиле.
+
+ТЕКСТУРА
+Создана встроенным инструментом image_gen по пользовательской фотографии.
+UV-развёртка адаптирована к фактическому расположению островов в атласе.
+
+Итоговый промпт:
+Create a flat production UV texture atlas for a low-poly PSX / PlayStation 1-style 3D custom PC tower, based on attached photo as visual design reference only. Square bitmap, all surfaces strictly orthographic, NO perspective and NO 3D render. Crisp large pixels, limited palette, strong painted low-resolution PS1 aesthetic, restrained dithering. Match the hot-rod case: bright saturated canary YELLOW rounded front, glossy BLACK side panel with broad curling RED-to-ORANGE flames, silver chrome details, tiny cobalt BLUE latch accents. Keep yellow richly yellow not beige. No background, no photo timestamp, no TikTok watermark, no creator signature, no captions. EXACT FULL-BLEED atlas layout as 3 columns and 2 rows: columns split at 52% and 76% of image width; rows split at 60% of height. Top-left region (0-52% width,0-60% height): complete LEFT SIDE panel. Front of tower is on RIGHT edge of this panel. Black background, sweeping red-orange flames growing from right/front yellow edge toward left/back. Upper-left large angular smoke-glass WINDOW outlined in chrome; behind glass paint simple blocky red coolant hoses and computer components as baked texture. Window occupies x=10%-60% of this region and y=12%-55%, with angled lower right corner. On the right middle of this side panel a small chrome oval mask-shaped decoration. Tiny switch plate with red toggle and two lamps near bottom right. Bottom-left region (0-52% width,60%-100% height): complete RIGHT SIDE panel black with matching broad curling red-orange flames and yellow front right edge; NO window. Top-middle region (52%-76% width,0-60% height): complete FRONT panel, tall narrow yellow panel; chrome bull-skull silhouette emblem centered near top; two BLUE and chrome toggle-style latches at 30% and 70% across and at 48% down; two round analog needle meters side-by-side at 68% down, labels VGA and CPU; bottom has inset yellow bumper design and two slim dark chrome mesh intake strips at edges. No optical drives. Top-right region (76%-100% width,0-60% height): complete BACK panel, dark gunmetal steel with old PSU grill and AC socket top, rear motherboard IO at middle left and 7 horizontal expansion slots at bottom. Bottom-middle region (52%-76% width,60%-100% height): complete TOP panel, long narrow rectangle, black paint fading into red orange flames and yellow along its BOTTOM front edge, TWO round chrome fan wire guards aligned vertically on centerline, at 28% and 65% down this top region. Bottom-right region (76%-100% width,60%-100% height): plain dark BOTTOM panel, tiny vents and four chrome foot mounting points. Regions touch exactly at given grid lines, absolutely no labels, gutters or extra objects outside panels. Paint hardware directly in panels, flat textures only. Authentic chunky retro game texture.
+

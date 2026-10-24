@@ -1,0 +1,23 @@
+ВИДЕОКАРТА PSX — ЧЁРНО-КРАСНАЯ, ДВА ВЕНТИЛЯТОРА
+
+GPU_PSX.blend — основной файл Blender 4.5+.
+GPU_PSX.glb — переносимая модель с текстурой.
+GPU_PSX_atlas.png — атлас пиксельных текстур.
+GPU_PSX_preview.png / GPU_PSX_back_preview.png — превью с двух сторон.
+GPU_PSX_info.json — характеристики модели.
+
+Один редактируемый mesh, треугольные полигоны, UV-развёртка.
+Текстура встроена в .blend и .glb, фильтрация Closest сохраняет пиксели.
+Для просмотра текстуры в Blender: Material Preview (Z → M).
+Коллекция Studio содержит только камеры и свет.
+Это новая стилизованная модель по фотографии. Невидимая на фотографии
+задняя сторона дополнена в том же стиле. Точные размеры и расположение
+разъёмов условные: исходный референс имеет очень низкое разрешение.
+
+ТЕКСТУРА
+Создана встроенным image_gen по пользовательскому референсу.
+UV-развёртка подогнана под фактический атлас.
+
+Итоговый промпт:
+Create a square flat UV TEXTURE ATLAS for a genuine low-poly PSX / original PlayStation-style game model of the black-and-red dual-fan graphics card in the reference image. Reference image is subject/design only. No perspective, no 3D render, no scene, no white background. All regions are full-bleed rectangular flat orthographic textures touching one another. Very chunky LOW RES pixel art with approximately 128x128 effective pixel detail across the entire atlas, limited 24-color palette, dithered grey metal, strong red and charcoal black, baked simple shadows, NO smooth gradients, NO photorealism, NO tiny noise. DESIGN: left fan surrounded by a thick bright scarlet angular shroud, right fan mostly black angular shroud, some small red diagonal vents, two dark fans with visible broad curved blades and small light-grey hubs with an abstract black dragon-like emblem (no frog). EXACT LAYOUT: TOP HALF (x0-100%, y0-50%): the FRONT FACE of graphics card, a full-width wide 2:1 rectangle, black and red shroud, TWO equal circular fans centered at x25% and x75% of canvas, y25% of canvas, fan diameters35% of canvas width. The card fills this region edge to edge, WITHOUT the PCI bracket or gold contacts, without perspective. THIRD QUARTER (x0-100%, y50-75%): full-width backplate / rear PCB face, black printed circuit board, simple grey circuit and fastener marks, a few angular dark panels, no text, no flame design. BOTTOM QUARTER divided into FOUR equally high horizontal strips: strip1 y75-81.25% full width long black upper side rail with red diagonal vent accents; strip2 y81.25-87.5% full width thin silver dark heatsink fins; strip3 y87.5-93.75% left half silver I/O bracket showing ventilation holes, DVI rectangle and HDMI/DisplayPort sockets, right half gold PCIe finger contacts on dark brown-green PCB; strip4 y93.75-100% left half plain dark charcoal metal swatch, right half simple dark green circuit-board surface. Do not add captions, dimension lines, labels, branding, watermarks, decorative objects or gaps. The graphics card should be recognizable as the reference's older red/black two-fan gaming GPU. Strong readable shapes, genuinely coarse 1996 survival-horror item texture aesthetic.
+
