@@ -74,6 +74,10 @@ namespace ComputerRepairKiosk
             Body.useGravity = false;
             transform.SetParent(anchor, true);
             transform.SetPositionAndRotation(anchor.position, anchor.rotation);
+            // Teleport the physics pose too, so interpolation cannot restore the
+            // previous position after snapping (including the initial seating).
+            Body.position = anchor.position;
+            Body.rotation = anchor.rotation;
             RestorePlayerCollisions();
             RestoreRemovalCollisions(true);
         }
@@ -81,6 +85,14 @@ namespace ComputerRepairKiosk
         private void RestoreRemovalCollisions(bool force = false)
         {
             if (removalColliders == null) return;
+            // While extracting, wait until the part clears the assembly as a
+            // whole. Restoring neighbours one at a time can trap a RAM stick
+            // when the hand pulls it diagonally across the adjacent slots.
+            if (IsHeld && !force)
+                foreach (var b in removalColliders)
+                    if (b != null)
+                        foreach (var a in ownColliders)
+                            if (a != null && a.bounds.Intersects(b.bounds)) return;
             for (int i = 0; i < removalColliders.Length; i++)
             {
                 var b = removalColliders[i];

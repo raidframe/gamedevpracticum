@@ -53,14 +53,18 @@ namespace ComputerRepairKiosk
                 var part = hit.collider.GetComponentInParent<PhysicalPart>();
                 if (part != null && part == grabber.HeldPart) continue;
                 var socket = hit.collider.GetComponentInParent<PartSocket>();
-                if (hit.collider.isTrigger && socket == null) continue;
+                // Empty mount volumes must not hide components deeper in the case.
+                // Select installed parts through their solid collider; only target
+                // a socket trigger when carrying a compatible replacement.
+                if (hit.collider.isTrigger && (socket == null || grabber.HeldPart == null ||
+                    !socket.Accepts(grabber.HeldPart))) continue;
                 if (socket != null)
                 {
                     targetSocket = socket;
-                    if (grabber.HeldPart == null && socket.Occupant != null && socket.Occupant.CanPickUp)
+                    if (grabber.HeldPart == null && socket.Occupant != null && socket.Occupant.isActiveAndEnabled)
                         targetPart = socket.Occupant;
                 }
-                else if (part != null && part.CanPickUp) targetPart = part;
+                else if (part != null && part.isActiveAndEnabled) targetPart = part;
                 break; // Nearest non-ignored hit blocks everything behind it.
             }
         }
@@ -72,11 +76,19 @@ namespace ComputerRepairKiosk
                 if (grabber.HeldPart != null)
                 {
                     if (targetSocket != null && targetSocket.Accepts(grabber.HeldPart))
+                    {
+                        if (!targetSocket.RequirementMet) return "Install the required component first";
                         return targetSocket.CanInstall(grabber.HeldPart) ? "E — Install | LMB — Throw" : "Move the part closer to the socket";
+                    }
                     return "E — Drop | LMB — Throw";
                 }
                 if (targetPart != null)
+                {
+                    if (!targetPart.CanPickUp)
+                        return targetPart.Socket != null && targetPart.Socket.RemovalBlocker != null
+                            ? "Remove installed components first" : "This part cannot be removed";
                     return "E — " + (targetPart.Socket != null ? "Remove: " : "Pick up: ") + targetPart.DisplayName;
+                }
                 return "";
             }
         }
