@@ -13,6 +13,9 @@ namespace ComputerRepairKiosk
         private PhysicalPart targetPart;
         private PartSocket targetSocket;
         private GUIStyle promptStyle;
+        private GUIStyle nameStyle;
+        private GUIStyle descriptionStyle;
+        private GUIStyle conditionStyle;
         private bool wasActive;
         private bool ControlsActive => Application.isFocused && Cursor.lockState == CursorLockMode.Locked;
 
@@ -96,6 +99,8 @@ namespace ComputerRepairKiosk
         private void OnApplicationFocus(bool focused) { if (!focused) wasActive = false; }
         private void OnDisable() { wasActive = false; targetPart = null; targetSocket = null; }
 
+        private PhysicalPart InspectedPart => grabber.HeldPart != null ? grabber.HeldPart : targetPart;
+
         private void OnGUI()
         {
             if (!ControlsActive || grabber == null || viewCamera == null) return;
@@ -106,14 +111,42 @@ namespace ComputerRepairKiosk
             GUI.DrawTexture(new Rect(Screen.width / 2f - 1, Screen.height / 2f - 1, 2, 2), Texture2D.whiteTexture);
             GUI.color = previous;
             string prompt = Prompt;
-            if (prompt.Length == 0) return;
             if (promptStyle == null)
             {
-                promptStyle = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.MiddleCenter, fontSize = 18, wordWrap = true };
+                promptStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 16, wordWrap = true };
                 promptStyle.normal.textColor = Color.white;
+                nameStyle = new GUIStyle(GUI.skin.label) { fontSize = 20, fontStyle = FontStyle.Bold, wordWrap = true };
+                nameStyle.normal.textColor = Color.white;
+                descriptionStyle = new GUIStyle(GUI.skin.label) { fontSize = 15, wordWrap = true };
+                descriptionStyle.normal.textColor = new Color(.82f, .85f, .88f);
+                conditionStyle = new GUIStyle(GUI.skin.label) { fontSize = 15, alignment = TextAnchor.MiddleRight };
             }
-            float width = Mathf.Min(490, Screen.width - 20);
-            GUI.Box(new Rect((Screen.width - width) / 2, Screen.height / 2f + 38, width, 54), prompt, promptStyle);
+            var part = InspectedPart;
+            var information = part != null ? part.GetComponent<ComponentInformation>() : null;
+            if (prompt.Length == 0 && information == null) return;
+
+            float width = Mathf.Min(490, Screen.width - 24);
+            float innerWidth = width - 28;
+            float promptHeight = promptStyle.CalcHeight(new GUIContent(prompt), innerWidth);
+            float nameHeight = information != null ? Mathf.Max(28, nameStyle.CalcHeight(new GUIContent(part.DisplayName), innerWidth - 100)) : 0;
+            float descriptionHeight = information != null ? descriptionStyle.CalcHeight(new GUIContent(information.Description), innerWidth) : 0;
+            float height = 24 + promptHeight + (information != null ? nameHeight + descriptionHeight + 18 : 0);
+            Rect panel = new Rect((Screen.width - width) / 2, Screen.height - height - 24, width, height);
+            GUI.color = new Color(.045f, .055f, .065f, .95f);
+            GUI.DrawTexture(panel, Texture2D.whiteTexture);
+            GUI.color = previous;
+            float y = panel.y + 12;
+            if (information != null)
+            {
+                GUI.Label(new Rect(panel.x + 14, y, innerWidth - 100, nameHeight), part.DisplayName, nameStyle);
+                bool working = information.Condition == ComponentCondition.Working;
+                conditionStyle.normal.textColor = working ? new Color(.6f, .92f, .7f) : new Color(1, .58f, .48f);
+                GUI.Label(new Rect(panel.xMax - 110, y, 96, 28), working ? "Working" : "Faulty", conditionStyle);
+                y += nameHeight + 4;
+                GUI.Label(new Rect(panel.x + 14, y, innerWidth, descriptionHeight), information.Description, descriptionStyle);
+                y += descriptionHeight + 14;
+            }
+            GUI.Label(new Rect(panel.x + 14, y, innerWidth, promptHeight), prompt, promptStyle);
         }
     }
 }
