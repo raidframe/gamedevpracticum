@@ -10,8 +10,10 @@ namespace ComputerRepairKiosk
         [SerializeField] private PhysicsGrabber grabber;
         [SerializeField, Min(0.1f)] private float interactionDistance = 2f;
         [SerializeField] private LayerMask raycastLayers = Physics.DefaultRaycastLayers;
+        [SerializeField] private RepairScenario repairScenario;
         private PhysicalPart targetPart;
         private PartSocket targetSocket;
+        private RepairScenario targetTestStation;
         private GUIStyle promptStyle;
         private GUIStyle nameStyle;
         private GUIStyle descriptionStyle;
@@ -23,6 +25,7 @@ namespace ComputerRepairKiosk
         {
             targetPart = null;
             targetSocket = null;
+            targetTestStation = null;
             bool active = ControlsActive && viewCamera != null && grabber != null &&
                 !(Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame);
             // First click after focus loss captures the mouse instead of throwing.
@@ -39,6 +42,7 @@ namespace ComputerRepairKiosk
                         grabber.TryInstall(targetSocket); // Too far: keep holding.
                     else grabber.Drop(false);
                 }
+                else if (targetTestStation != null) targetTestStation.TestComputer();
                 else if (targetPart != null) grabber.TryPickUp(targetPart);
             }
             else if (grabber.HeldPart != null && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
@@ -56,12 +60,15 @@ namespace ComputerRepairKiosk
                 var part = hit.collider.GetComponentInParent<PhysicalPart>();
                 if (part != null && part == grabber.HeldPart) continue;
                 var socket = hit.collider.GetComponentInParent<PartSocket>();
+                var testStation = hit.collider.GetComponentInParent<RepairScenario>();
                 // Empty mount volumes must not hide components deeper in the case.
                 // Select installed parts through their solid collider; only target
                 // a socket trigger when carrying a compatible replacement.
                 if (hit.collider.isTrigger && (socket == null || grabber.HeldPart == null ||
                     !socket.Accepts(grabber.HeldPart))) continue;
-                if (socket != null)
+                if (testStation != null && testStation.isActiveAndEnabled)
+                    targetTestStation = testStation;
+                else if (socket != null)
                 {
                     targetSocket = socket;
                     if (grabber.HeldPart == null && socket.Occupant != null && socket.Occupant.isActiveAndEnabled)
@@ -85,6 +92,7 @@ namespace ComputerRepairKiosk
                     }
                     return "E — Drop | LMB — Throw";
                 }
+                if (targetTestStation != null) return "E — Test PC";
                 if (targetPart != null)
                 {
                     if (!targetPart.CanPickUp)
@@ -97,7 +105,7 @@ namespace ComputerRepairKiosk
         }
 
         private void OnApplicationFocus(bool focused) { if (!focused) wasActive = false; }
-        private void OnDisable() { wasActive = false; targetPart = null; targetSocket = null; }
+        private void OnDisable() { wasActive = false; targetPart = null; targetSocket = null; targetTestStation = null; }
 
         private PhysicalPart InspectedPart => grabber.HeldPart != null ? grabber.HeldPart : targetPart;
 
@@ -107,7 +115,7 @@ namespace ComputerRepairKiosk
             Color previous = GUI.color;
             GUI.color = Color.black;
             GUI.DrawTexture(new Rect(Screen.width / 2f - 3, Screen.height / 2f - 3, 6, 6), Texture2D.whiteTexture);
-            GUI.color = targetPart != null || targetSocket != null ? new Color(.65f, 1, .75f) : Color.white;
+            GUI.color = targetPart != null || targetSocket != null || targetTestStation != null ? new Color(.65f, 1, .75f) : Color.white;
             GUI.DrawTexture(new Rect(Screen.width / 2f - 1, Screen.height / 2f - 1, 2, 2), Texture2D.whiteTexture);
             GUI.color = previous;
             string prompt = Prompt;
@@ -121,6 +129,7 @@ namespace ComputerRepairKiosk
                 descriptionStyle.normal.textColor = new Color(.82f, .85f, .88f);
                 conditionStyle = new GUIStyle(GUI.skin.label) { fontSize = 15, alignment = TextAnchor.MiddleRight };
             }
+            DrawRepairObjective();
             var part = InspectedPart;
             var information = part != null ? part.GetComponent<ComponentInformation>() : null;
             if (prompt.Length == 0 && information == null) return;
@@ -147,6 +156,32 @@ namespace ComputerRepairKiosk
                 y += descriptionHeight + 14;
             }
             GUI.Label(new Rect(panel.x + 14, y, innerWidth, promptHeight), prompt, promptStyle);
+        }
+
+        private void DrawRepairObjective()
+        {
+            if (repairScenario == null || !repairScenario.isActiveAndEnabled) return;
+            float width = Mathf.Min(360, Screen.width - 24);
+            float innerWidth = width - 28;
+            string title = repairScenario.IsComplete ? "Repair complete" : "Job: Replace faulty RAM";
+            string instructions = repairScenario.IsComplete ? "The PC passed all checks." :
+                "Use the spare RAM on the workbench.\nReassemble the PC and use Test PC.";
+            float titleHeight = nameStyle.CalcHeight(new GUIContent(title), innerWidth);
+            float instructionsHeight = descriptionStyle.CalcHeight(new GUIContent(instructions), innerWidth);
+            string result = repairScenario.IsComplete ? "" : repairScenario.ResultMessage;
+            float resultHeight = result.Length > 0 ? descriptionStyle.CalcHeight(new GUIContent(result), innerWidth) + 12 : 0;
+            Rect panel = new Rect(12, 12, width, 28 + titleHeight + instructionsHeight + resultHeight);
+            Color previous = GUI.color;
+            GUI.color = new Color(.045f, .055f, .065f, .95f);
+            GUI.DrawTexture(panel, Texture2D.whiteTexture);
+            GUI.color = previous;
+            GUI.Label(new Rect(26, 24, innerWidth, titleHeight), title, nameStyle);
+            float y = 28 + titleHeight;
+            GUI.Label(new Rect(26, y, innerWidth, instructionsHeight), instructions, descriptionStyle);
+            if (resultHeight == 0) return;
+            GUI.color = repairScenario.IsComplete ? new Color(.6f, .92f, .7f) : new Color(1, .78f, .6f);
+            GUI.Label(new Rect(26, y + instructionsHeight + 12, innerWidth, resultHeight), result, descriptionStyle);
+            GUI.color = previous;
         }
     }
 }

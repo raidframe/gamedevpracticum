@@ -20,7 +20,7 @@ namespace ComputerRepairKiosk
 
         private void Awake()
         {
-            ownColliders = GetComponentsInChildren<Collider>();
+            ownColliders = GetOwnColliders();
             Body.interpolation = RigidbodyInterpolation.Interpolate;
             Body.collisionDetectionMode = Body.isKinematic ? CollisionDetectionMode.ContinuousSpeculative : CollisionDetectionMode.ContinuousDynamic;
         }
@@ -121,7 +121,7 @@ namespace ComputerRepairKiosk
 
         private void SetPlayerCollisions(bool ignore)
         {
-            if (ownColliders == null) ownColliders = GetComponentsInChildren<Collider>();
+            if (ownColliders == null) ownColliders = GetOwnColliders();
             if (ignoredPlayerColliders == null) return;
             foreach (var a in ownColliders)
                 foreach (var b in ignoredPlayerColliders)
@@ -132,6 +132,14 @@ namespace ComputerRepairKiosk
         {
             SetPlayerCollisions(false);
             ignoredPlayerColliders = null;
+        }
+
+        private Collider[] GetOwnColliders()
+        {
+            // Mounted components have their own bodies; socket triggers are not
+            // part of the physical surface we ignore while moving this part.
+            return System.Array.FindAll(GetComponentsInChildren<Collider>(true),
+                collider => !collider.isTrigger && collider.attachedRigidbody == Body);
         }
 
         private void OnDisable()
