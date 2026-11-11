@@ -39,7 +39,7 @@ namespace ComputerRepairKiosk
         public bool Accepts(PhysicalPart part) => isActiveAndEnabled && Occupant == null &&
             part != null && part.CompatibilityId == compatibilityId;
 
-        public bool CanInstall(PhysicalPart part) => Accepts(part) && RequirementMet && part.IsHeld &&
+        public bool CanInstall(PhysicalPart part) => Accepts(part) && RequirementMet && part.IsHeld && !part.IsInspecting &&
             Vector3.Distance(part.transform.position, transform.position) <= installationDistance;
 
         public bool TryInstall(PhysicalPart part)

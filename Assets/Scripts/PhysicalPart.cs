@@ -11,10 +11,12 @@ namespace ComputerRepairKiosk
         private Collider[] ownColliders;
         private Collider[] ignoredPlayerColliders;
         private Collider[] removalColliders;
+        private ComponentInspection inspection;
         public string DisplayName => displayName;
         public string CompatibilityId => compatibilityId;
         public PartSocket Socket { get; private set; }
         public bool IsHeld { get; private set; }
+        internal bool IsInspecting => inspection != null;
         public bool CanPickUp => isActiveAndEnabled && !IsHeld && (Socket == null || Socket.AllowRemoval);
         public Rigidbody Body => body != null ? body : body = GetComponent<Rigidbody>();
 
@@ -53,11 +55,27 @@ namespace ComputerRepairKiosk
 
         public void Release(Vector3 velocity)
         {
-            if (!IsHeld) return;
+            if (!IsHeld || IsInspecting) return;
             IsHeld = false;
             Body.useGravity = true;
             Body.linearVelocity = velocity;
             // Restore player collisions after separation, avoiding a kick when dropped.
+        }
+
+        internal bool TryBeginInspection(Camera view)
+        {
+            if (!isActiveAndEnabled || !IsHeld || IsInspecting || view == null || Body.isKinematic) return false;
+            inspection = new ComponentInspection(this, view);
+            return true;
+        }
+
+        internal void RotateInspection(Vector2 mouseDelta) => inspection?.Rotate(mouseDelta);
+
+        internal void EndInspection()
+        {
+            if (inspection == null) return;
+            inspection.Restore();
+            inspection = null;
         }
 
         internal void Seat(PartSocket socket, Transform anchor)
@@ -109,6 +127,7 @@ namespace ComputerRepairKiosk
 
         private void FixedUpdate()
         {
+            if (IsInspecting) return;
             RestoreRemovalCollisions();
             if (IsHeld || ignoredPlayerColliders == null) return;
             foreach (var a in ownColliders)
@@ -144,6 +163,7 @@ namespace ComputerRepairKiosk
 
         private void OnDisable()
         {
+            EndInspection();
             if (IsHeld) Release(Vector3.zero);
             RestorePlayerCollisions();
             RestoreRemovalCollisions(true);

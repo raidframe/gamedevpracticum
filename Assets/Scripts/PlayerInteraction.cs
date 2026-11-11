@@ -27,15 +27,32 @@ namespace ComputerRepairKiosk
         private void LateUpdate()
         {
             ClearTarget();
-            bool active = ControlsActive && viewCamera != null && grabber != null &&
-                !(Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame);
+            var keyboard = Keyboard.current;
+            bool escapePressed = keyboard != null && keyboard.escapeKey.wasPressedThisFrame;
+            bool inspectPressed = keyboard != null && keyboard.rKey.wasPressedThisFrame;
+            if (grabber != null && grabber.IsInspecting)
+            {
+                if (inspectPressed || escapePressed || !ControlsActive || viewCamera == null)
+                {
+                    EndInspection();
+                    if (escapePressed && Application.isFocused) FirstPersonController.SetCursorCaptured(true);
+                }
+                else if (Mouse.current != null)
+                    grabber.HeldPart.RotateInspection(Mouse.current.delta.ReadValue());
+                return;
+            }
+
+            bool active = ControlsActive && viewCamera != null && grabber != null && !escapePressed;
             // First click after focus loss captures the mouse instead of throwing.
             bool acceptInput = active && wasActive;
             wasActive = active;
             if (!active) return;
+            if (acceptInput && inspectPressed && grabber.HeldPart != null &&
+                grabber.HeldPart.TryBeginInspection(viewCamera)) return;
+
             FindTarget();
             if (!acceptInput) return;
-            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            if (keyboard != null && keyboard.eKey.wasPressedThisFrame)
             {
                 if (grabber.HeldPart != null)
                 {
@@ -85,17 +102,18 @@ namespace ComputerRepairKiosk
 
         private (string Action, string Hint, Color Accent, bool Highlight) GetFeedback()
         {
-            const string throwAction = "[LMB] Throw";
-            const string dropAction = "[E] Drop   " + throwAction;
+            const string heldActions = "[LMB] Throw   [R] Inspect";
+            const string dropAction = "[E] Drop   " + heldActions;
             var heldPart = grabber.HeldPart;
             if (heldPart != null)
             {
+                if (grabber.IsInspecting) return ("[Mouse] Rotate   [R / Esc] Exit", "", Color.white, false);
                 if (targetSocket != null && targetSocket.Accepts(heldPart))
                 {
                     if (targetSocket.CanInstall(heldPart))
-                        return ("[E] Install   " + throwAction, "", ReadyColor, true);
+                        return ("[E] Install   " + heldActions, "", ReadyColor, true);
                     string reason = targetSocket.RequirementMet ? "Move the part closer" : "Install the required component first";
-                    return (throwAction, reason, BlockedColor, false);
+                    return (heldActions, reason, BlockedColor, false);
                 }
 
                 var occupant = targetSocket != null ? targetSocket.Occupant : null;
@@ -118,11 +136,23 @@ namespace ComputerRepairKiosk
             return ("", "", Color.white, false);
         }
 
-        private void OnApplicationFocus(bool focused) { if (!focused) wasActive = false; }
+        private void OnApplicationFocus(bool focused)
+        {
+            if (focused) return;
+            wasActive = false;
+            EndInspection();
+        }
+
         private void OnDisable()
         {
             wasActive = false;
             ClearTarget();
+            EndInspection();
+        }
+
+        private void EndInspection()
+        {
+            if (grabber != null && grabber.IsInspecting) grabber.HeldPart.EndInspection();
         }
 
         private void ClearTarget()
@@ -138,13 +168,16 @@ namespace ComputerRepairKiosk
             if (Event.current.type != EventType.Repaint || !ControlsActive || grabber == null || viewCamera == null) return;
             var feedback = GetFeedback();
             Color previous = GUI.color;
-            if (feedback.Highlight && targetCollider != null)
-                DrawTargetBrackets(targetCollider, feedback.Accent);
-            GUI.color = Color.black;
-            GUI.DrawTexture(new Rect(Screen.width / 2f - 3, Screen.height / 2f - 3, 6, 6), Texture2D.whiteTexture);
-            GUI.color = feedback.Accent;
-            GUI.DrawTexture(new Rect(Screen.width / 2f - 1, Screen.height / 2f - 1, 2, 2), Texture2D.whiteTexture);
-            GUI.color = previous;
+            if (!grabber.IsInspecting)
+            {
+                if (feedback.Highlight && targetCollider != null)
+                    DrawTargetBrackets(targetCollider, feedback.Accent);
+                GUI.color = Color.black;
+                GUI.DrawTexture(new Rect(Screen.width / 2f - 3, Screen.height / 2f - 3, 6, 6), Texture2D.whiteTexture);
+                GUI.color = feedback.Accent;
+                GUI.DrawTexture(new Rect(Screen.width / 2f - 1, Screen.height / 2f - 1, 2, 2), Texture2D.whiteTexture);
+                GUI.color = previous;
+            }
             if (promptStyle == null)
             {
                 promptStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 16, wordWrap = true };
@@ -155,7 +188,7 @@ namespace ComputerRepairKiosk
                 descriptionStyle.normal.textColor = new Color(.82f, .85f, .88f);
                 conditionStyle = new GUIStyle(GUI.skin.label) { fontSize = 15, alignment = TextAnchor.MiddleRight };
             }
-            DrawRepairObjective();
+            if (!grabber.IsInspecting) DrawRepairObjective();
             var part = grabber.HeldPart != null ? grabber.HeldPart : targetPart;
             var information = part != null ? part.GetComponent<ComponentInformation>() : null;
             if (feedback.Action.Length == 0 && feedback.Hint.Length == 0 && part == null) return;

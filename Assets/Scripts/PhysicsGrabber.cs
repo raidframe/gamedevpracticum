@@ -14,6 +14,7 @@ namespace ComputerRepairKiosk
         [SerializeField, Min(0.5f)] private float breakDistance = 1.5f;
         private Quaternion heldRotation;
         public PhysicalPart HeldPart { get; private set; }
+        internal bool IsInspecting => HeldPart != null && HeldPart.IsInspecting;
 
         public bool TryPickUp(PhysicalPart part)
         {
@@ -25,7 +26,7 @@ namespace ComputerRepairKiosk
 
         public void Drop(bool throwForward)
         {
-            if (HeldPart == null) return;
+            if (HeldPart == null || IsInspecting) return;
             HeldPart.Release(throwForward && view != null ? view.forward * throwSpeed : Vector3.zero);
             HeldPart = null;
         }
@@ -42,9 +43,11 @@ namespace ComputerRepairKiosk
             if (HeldPart == null) return;
             if (!HeldPart.isActiveAndEnabled || !HeldPart.IsHeld || view == null)
             {
+                HeldPart.EndInspection();
                 Drop(false);
                 return;
             }
+            if (IsInspecting) return;
             Vector3 target = view.TransformPoint(holdOffset);
             Vector3 error = target - HeldPart.Body.worldCenterOfMass;
             if (error.magnitude > breakDistance)
@@ -64,6 +67,10 @@ namespace ComputerRepairKiosk
                 Vector3.ClampMagnitude(desiredSpin, 8f), 30f * Time.fixedDeltaTime);
         }
 
-        private void OnDisable() => Drop(false);
+        private void OnDisable()
+        {
+            if (HeldPart != null) HeldPart.EndInspection();
+            Drop(false);
+        }
     }
 }

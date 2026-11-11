@@ -13,6 +13,7 @@ namespace ComputerRepairKiosk
         [SerializeField] private float gravity = -20f;
 
         private CharacterController controller;
+        private PhysicsGrabber grabber;
         private InputAction moveAction;
         private InputAction lookAction;
         private float pitch;
@@ -21,6 +22,7 @@ namespace ComputerRepairKiosk
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
+            grabber = GetComponent<PhysicsGrabber>();
             if (cameraTransform == null)
             {
                 Debug.LogError("Assign the player's camera to FirstPersonController.", this);
@@ -47,6 +49,9 @@ namespace ComputerRepairKiosk
 
         private void Update()
         {
+            // Inspection owns mouse movement and Escape until it returns the held part.
+            if (grabber != null && grabber.IsInspecting) return;
+
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
                 SetCursorCaptured(false);
             else if (Application.isFocused && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
@@ -91,7 +96,7 @@ namespace ComputerRepairKiosk
             lookAction?.Dispose();
         }
 
-        private static void SetCursorCaptured(bool captured)
+        internal static void SetCursorCaptured(bool captured)
         {
             Cursor.lockState = captured ? CursorLockMode.Locked : CursorLockMode.None;
             Cursor.visible = !captured;
