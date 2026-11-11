@@ -14,18 +14,19 @@ namespace ComputerRepairKiosk
         private PhysicalPart targetPart;
         private PartSocket targetSocket;
         private RepairScenario targetTestStation;
+        private Collider targetCollider;
         private GUIStyle promptStyle;
         private GUIStyle nameStyle;
         private GUIStyle descriptionStyle;
         private GUIStyle conditionStyle;
         private bool wasActive;
+        private static readonly Color ReadyColor = new Color(.66f, .9f, .77f);
+        private static readonly Color BlockedColor = new Color(.98f, .75f, .48f);
         private bool ControlsActive => Application.isFocused && Cursor.lockState == CursorLockMode.Locked;
 
         private void LateUpdate()
         {
-            targetPart = null;
-            targetSocket = null;
-            targetTestStation = null;
+            ClearTarget();
             bool active = ControlsActive && viewCamera != null && grabber != null &&
                 !(Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame);
             // First click after focus loss captures the mouse instead of throwing.
@@ -39,11 +40,13 @@ namespace ComputerRepairKiosk
                 if (grabber.HeldPart != null)
                 {
                     if (targetSocket != null && targetSocket.Accepts(grabber.HeldPart))
-                        grabber.TryInstall(targetSocket); // Too far: keep holding.
+                    {
+                        if (grabber.TryInstall(targetSocket)) ClearTarget();
+                    }
                     else grabber.Drop(false);
                 }
                 else if (targetTestStation != null) targetTestStation.TestComputer();
-                else if (targetPart != null) grabber.TryPickUp(targetPart);
+                else if (targetPart != null && grabber.TryPickUp(targetPart)) ClearTarget();
             }
             else if (grabber.HeldPart != null && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
                 grabber.Drop(true);
@@ -66,6 +69,7 @@ namespace ComputerRepairKiosk
                 // a socket trigger when carrying a compatible replacement.
                 if (hit.collider.isTrigger && (socket == null || grabber.HeldPart == null ||
                     !socket.Accepts(grabber.HeldPart))) continue;
+                targetCollider = hit.collider;
                 if (testStation != null && testStation.isActiveAndEnabled)
                     targetTestStation = testStation;
                 else if (socket != null)
@@ -79,46 +83,68 @@ namespace ComputerRepairKiosk
             }
         }
 
-        private string Prompt
+        private (string Action, string Hint, Color Accent, bool Highlight) GetFeedback()
         {
-            get
+            const string throwAction = "[LMB] Throw";
+            const string dropAction = "[E] Drop   " + throwAction;
+            var heldPart = grabber.HeldPart;
+            if (heldPart != null)
             {
-                if (grabber.HeldPart != null)
+                if (targetSocket != null && targetSocket.Accepts(heldPart))
                 {
-                    if (targetSocket != null && targetSocket.Accepts(grabber.HeldPart))
-                    {
-                        if (!targetSocket.RequirementMet) return "Install the required component first";
-                        return targetSocket.CanInstall(grabber.HeldPart) ? "E — Install | LMB — Throw" : "Move the part closer to the socket";
-                    }
-                    return "E — Drop | LMB — Throw";
+                    if (targetSocket.CanInstall(heldPart))
+                        return ("[E] Install   " + throwAction, "", ReadyColor, true);
+                    string reason = targetSocket.RequirementMet ? "Move the part closer" : "Install the required component first";
+                    return (throwAction, reason, BlockedColor, false);
                 }
-                if (targetTestStation != null) return "E — Test PC";
-                if (targetPart != null)
-                {
-                    if (!targetPart.CanPickUp)
-                        return targetPart.Socket != null && targetPart.Socket.RemovalBlocker != null
-                            ? "Remove installed components first" : "This part cannot be removed";
-                    return "E — " + (targetPart.Socket != null ? "Remove: " : "Pick up: ") + targetPart.DisplayName;
-                }
-                return "";
+
+                var occupant = targetSocket != null ? targetSocket.Occupant : null;
+                if (occupant != null && occupant.CompatibilityId == heldPart.CompatibilityId)
+                    return (dropAction, "Socket occupied", BlockedColor, false);
+                return (dropAction, "", Color.white, false);
             }
+
+            if (targetTestStation != null) return ("[E] Test PC", "", ReadyColor, false);
+            if (targetPart != null)
+            {
+                if (!targetPart.CanPickUp)
+                {
+                    var blocker = targetPart.Socket != null ? targetPart.Socket.RemovalBlocker : null;
+                    string reason = blocker != null ? "Remove " + blocker.Occupant.DisplayName + " first" : "Cannot remove this part";
+                    return ("", reason, BlockedColor, false);
+                }
+                return (targetPart.Socket != null ? "[E] Remove" : "[E] Pick Up", "", ReadyColor, true);
+            }
+            return ("", "", Color.white, false);
         }
 
         private void OnApplicationFocus(bool focused) { if (!focused) wasActive = false; }
-        private void OnDisable() { wasActive = false; targetPart = null; targetSocket = null; targetTestStation = null; }
+        private void OnDisable()
+        {
+            wasActive = false;
+            ClearTarget();
+        }
 
-        private PhysicalPart InspectedPart => grabber.HeldPart != null ? grabber.HeldPart : targetPart;
+        private void ClearTarget()
+        {
+            targetPart = null;
+            targetSocket = null;
+            targetTestStation = null;
+            targetCollider = null;
+        }
 
         private void OnGUI()
         {
-            if (!ControlsActive || grabber == null || viewCamera == null) return;
+            if (Event.current.type != EventType.Repaint || !ControlsActive || grabber == null || viewCamera == null) return;
+            var feedback = GetFeedback();
             Color previous = GUI.color;
+            if (feedback.Highlight && targetCollider != null)
+                DrawTargetBrackets(targetCollider, feedback.Accent);
             GUI.color = Color.black;
             GUI.DrawTexture(new Rect(Screen.width / 2f - 3, Screen.height / 2f - 3, 6, 6), Texture2D.whiteTexture);
-            GUI.color = targetPart != null || targetSocket != null || targetTestStation != null ? new Color(.65f, 1, .75f) : Color.white;
+            GUI.color = feedback.Accent;
             GUI.DrawTexture(new Rect(Screen.width / 2f - 1, Screen.height / 2f - 1, 2, 2), Texture2D.whiteTexture);
             GUI.color = previous;
-            string prompt = Prompt;
             if (promptStyle == null)
             {
                 promptStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 16, wordWrap = true };
@@ -130,32 +156,92 @@ namespace ComputerRepairKiosk
                 conditionStyle = new GUIStyle(GUI.skin.label) { fontSize = 15, alignment = TextAnchor.MiddleRight };
             }
             DrawRepairObjective();
-            var part = InspectedPart;
+            var part = grabber.HeldPart != null ? grabber.HeldPart : targetPart;
             var information = part != null ? part.GetComponent<ComponentInformation>() : null;
-            if (prompt.Length == 0 && information == null) return;
+            if (feedback.Action.Length == 0 && feedback.Hint.Length == 0 && part == null) return;
 
-            float width = Mathf.Min(490, Screen.width - 24);
+            float width = Mathf.Min(information != null ? 420 : 320, Screen.width - 24);
             float innerWidth = width - 28;
-            float promptHeight = promptStyle.CalcHeight(new GUIContent(prompt), innerWidth);
-            float nameHeight = information != null ? Mathf.Max(28, nameStyle.CalcHeight(new GUIContent(part.DisplayName), innerWidth - 100)) : 0;
+            float promptHeight = feedback.Action.Length > 0 ? promptStyle.CalcHeight(new GUIContent(feedback.Action), innerWidth) : 0;
+            float hintHeight = feedback.Hint.Length > 0 ? promptStyle.CalcHeight(new GUIContent(feedback.Hint), innerWidth) : 0;
+            float nameWidth = information != null ? innerWidth - 100 : innerWidth;
+            float nameHeight = part != null ? Mathf.Max(28, nameStyle.CalcHeight(new GUIContent(part.DisplayName), nameWidth)) : 0;
             float descriptionHeight = information != null ? descriptionStyle.CalcHeight(new GUIContent(information.Description), innerWidth) : 0;
-            float height = 24 + promptHeight + (information != null ? nameHeight + descriptionHeight + 18 : 0);
+            float height = 20 + nameHeight + descriptionHeight + promptHeight + hintHeight;
             Rect panel = new Rect((Screen.width - width) / 2, Screen.height - height - 24, width, height);
             GUI.color = new Color(.045f, .055f, .065f, .95f);
             GUI.DrawTexture(panel, Texture2D.whiteTexture);
             GUI.color = previous;
-            float y = panel.y + 12;
+            float y = panel.y + 10;
+            if (part != null)
+                GUI.Label(new Rect(panel.x + 14, y, nameWidth, nameHeight), part.DisplayName, nameStyle);
             if (information != null)
             {
-                GUI.Label(new Rect(panel.x + 14, y, innerWidth - 100, nameHeight), part.DisplayName, nameStyle);
                 bool working = information.Condition == ComponentCondition.Working;
                 conditionStyle.normal.textColor = working ? new Color(.6f, .92f, .7f) : new Color(1, .58f, .48f);
                 GUI.Label(new Rect(panel.xMax - 110, y, 96, 28), working ? "Working" : "Faulty", conditionStyle);
-                y += nameHeight + 4;
-                GUI.Label(new Rect(panel.x + 14, y, innerWidth, descriptionHeight), information.Description, descriptionStyle);
-                y += descriptionHeight + 14;
+                GUI.Label(new Rect(panel.x + 14, y + nameHeight, innerWidth, descriptionHeight), information.Description, descriptionStyle);
             }
-            GUI.Label(new Rect(panel.x + 14, y, innerWidth, promptHeight), prompt, promptStyle);
+            y += nameHeight + descriptionHeight;
+            if (promptHeight > 0)
+                GUI.Label(new Rect(panel.x + 14, y, innerWidth, promptHeight), feedback.Action, promptStyle);
+            if (hintHeight > 0)
+            {
+                GUI.color = BlockedColor;
+                GUI.Label(new Rect(panel.x + 14, y + promptHeight, innerWidth, hintHeight), feedback.Hint, promptStyle);
+                GUI.color = previous;
+            }
+        }
+
+        private void DrawTargetBrackets(Collider collider, Color color)
+        {
+            var box = collider as BoxCollider;
+            Bounds bounds = box != null ? new Bounds(box.center, box.size) : collider.bounds;
+            Vector3 localMin = bounds.min;
+            Vector3 localMax = bounds.max;
+            Vector2 min = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            Vector2 max = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            for (int corner = 0; corner < 8; corner++)
+            {
+                Vector3 point = new Vector3(
+                    (corner & 1) == 0 ? localMin.x : localMax.x,
+                    (corner & 2) == 0 ? localMin.y : localMax.y,
+                    (corner & 4) == 0 ? localMin.z : localMax.z);
+                Vector3 screen = viewCamera.WorldToScreenPoint(box != null ? box.transform.TransformPoint(point) : point);
+                if (screen.z <= viewCamera.nearClipPlane)
+                {
+                    // Keep a small focus marker if the part crosses the near plane.
+                    min = new Vector2(Screen.width, Screen.height) * .5f - Vector2.one * 9f;
+                    max = min + Vector2.one * 18f;
+                    break;
+                }
+                var guiPoint = new Vector2(screen.x, Screen.height - screen.y);
+                min = Vector2.Min(min, guiPoint);
+                max = Vector2.Max(max, guiPoint);
+            }
+
+            // Keep the corners legible on thin parts, such as RAM seen edge-on.
+            Vector2 center = (min + max) * .5f;
+            Vector2 halfSize = Vector2.Max((max - min) * .5f + Vector2.one * 5f, Vector2.one * 11f);
+            float left = Mathf.Round(Mathf.Max(8, center.x - halfSize.x));
+            float right = Mathf.Round(Mathf.Min(Screen.width - 8, center.x + halfSize.x));
+            float top = Mathf.Round(Mathf.Max(8, center.y - halfSize.y));
+            float bottom = Mathf.Round(Mathf.Min(Screen.height - 8, center.y + halfSize.y));
+            float length = Mathf.Round(Mathf.Clamp(Mathf.Min(right - left, bottom - top) * .22f, 4, 11));
+            if (right - left < 2 * length || bottom - top < 2 * length) return;
+
+            GUI.color = new Color(color.r, color.g, color.b, .85f);
+            DrawCorner(left, top, length, length);
+            DrawCorner(right, top, -length, length);
+            DrawCorner(left, bottom, length, -length);
+            DrawCorner(right, bottom, -length, -length);
+        }
+
+        private static void DrawCorner(float x, float y, float horizontal, float vertical)
+        {
+            const float thickness = 2;
+            GUI.DrawTexture(new Rect(x + Mathf.Min(0, horizontal), y, Mathf.Abs(horizontal) + thickness, thickness), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(x, y + Mathf.Min(0, vertical), thickness, Mathf.Abs(vertical) + thickness), Texture2D.whiteTexture);
         }
 
         private void DrawRepairObjective()
