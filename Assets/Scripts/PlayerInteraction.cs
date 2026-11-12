@@ -14,6 +14,7 @@ namespace ComputerRepairKiosk
         private PhysicalPart targetPart;
         private PartSocket targetSocket;
         private RepairScenario targetTestStation;
+        private PcDiagnosticPanel diagnosticPanel;
         private Collider targetCollider;
         private GUIStyle promptStyle;
         private GUIStyle nameStyle;
@@ -23,12 +24,20 @@ namespace ComputerRepairKiosk
         private static readonly Color ReadyColor = new Color(.66f, .9f, .77f);
         private static readonly Color BlockedColor = new Color(.98f, .75f, .48f);
         private bool ControlsActive => Application.isFocused && Cursor.lockState == CursorLockMode.Locked;
+        internal bool DiagnosticsOpen => diagnosticPanel != null && diagnosticPanel.IsOpen;
 
         private void LateUpdate()
         {
             ClearTarget();
             var keyboard = Keyboard.current;
             bool escapePressed = keyboard != null && keyboard.escapeKey.wasPressedThisFrame;
+            if (DiagnosticsOpen)
+            {
+                if (escapePressed) CloseDiagnostics();
+                else diagnosticPanel.RefreshSummary();
+                return;
+            }
+
             bool inspectPressed = keyboard != null && keyboard.rKey.wasPressedThisFrame;
             if (grabber != null && grabber.IsInspecting)
             {
@@ -62,7 +71,7 @@ namespace ComputerRepairKiosk
                     }
                     else grabber.Drop(false);
                 }
-                else if (targetTestStation != null) targetTestStation.TestComputer();
+                else if (targetTestStation != null) OpenDiagnostics(targetTestStation);
                 else if (targetPart != null && grabber.TryPickUp(targetPart)) ClearTarget();
             }
             else if (grabber.HeldPart != null && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
@@ -148,6 +157,25 @@ namespace ComputerRepairKiosk
             wasActive = false;
             ClearTarget();
             EndInspection();
+            if (DiagnosticsOpen) CloseDiagnostics();
+        }
+
+        private void OnDestroy() => diagnosticPanel?.Destroy();
+
+        private void OpenDiagnostics(RepairScenario station)
+        {
+            station.TestComputer();
+            diagnosticPanel ??= new PcDiagnosticPanel(CloseDiagnostics);
+            diagnosticPanel.Show(station);
+            wasActive = false;
+            FirstPersonController.SetCursorCaptured(false);
+        }
+
+        private void CloseDiagnostics()
+        {
+            diagnosticPanel.Hide();
+            wasActive = false;
+            if (isActiveAndEnabled && Application.isFocused) FirstPersonController.SetCursorCaptured(true);
         }
 
         private void EndInspection()
@@ -165,7 +193,7 @@ namespace ComputerRepairKiosk
 
         private void OnGUI()
         {
-            if (Event.current.type != EventType.Repaint || !ControlsActive || grabber == null || viewCamera == null) return;
+            if (Event.current.type != EventType.Repaint || DiagnosticsOpen || !ControlsActive || grabber == null || viewCamera == null) return;
             var feedback = GetFeedback();
             Color previous = GUI.color;
             if (!grabber.IsInspecting)

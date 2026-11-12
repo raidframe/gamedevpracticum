@@ -14,6 +14,7 @@ namespace ComputerRepairKiosk
 
         private CharacterController controller;
         private PhysicsGrabber grabber;
+        private PlayerInteraction interaction;
         private InputAction moveAction;
         private InputAction lookAction;
         private float pitch;
@@ -23,6 +24,7 @@ namespace ComputerRepairKiosk
         {
             controller = GetComponent<CharacterController>();
             grabber = GetComponent<PhysicsGrabber>();
+            interaction = GetComponentInChildren<PlayerInteraction>();
             if (cameraTransform == null)
             {
                 Debug.LogError("Assign the player's camera to FirstPersonController.", this);
@@ -49,8 +51,7 @@ namespace ComputerRepairKiosk
 
         private void Update()
         {
-            // Inspection owns mouse movement and Escape until it returns the held part.
-            if (grabber != null && grabber.IsInspecting) return;
+            if ((grabber != null && grabber.IsInspecting) || (interaction != null && interaction.DiagnosticsOpen)) return;
 
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
                 SetCursorCaptured(false);
