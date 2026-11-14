@@ -12,5 +12,6 @@ namespace ComputerRepairKiosk
 
         public string Description => description;
         public ComponentCondition Condition => condition;
+        internal void SetCondition(ComponentCondition value) => condition = value;
     }
 }

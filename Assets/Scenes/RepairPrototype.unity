@@ -587,6 +587,41 @@ MonoBehaviour:
   - {fileID: 966555340}
   - {fileID: 539907575}
   - {fileID: 117276262}
+  scenarioIndex: 0
+  scenarios:
+  - name: Replace faulty RAM
+    instructions: "Use the spare RAM on the workbench.\nReassemble the PC and use Test PC."
+    issues:
+    - socket: {fileID: 1183826427}
+      state: 0
+      workbenchSpot: {fileID: 0}
+  - name: Replace faulty GPU
+    instructions: "Use the spare GPU on the workbench.\nReassemble the PC and use Test PC."
+    issues:
+    - socket: {fileID: 143719547}
+      state: 0
+      workbenchSpot: {fileID: 715670010002}
+  - name: Replace faulty CPU
+    instructions: "Remove the cooler and use the spare CPU on the workbench.\nReassemble the PC and use Test PC."
+    issues:
+    - socket: {fileID: 714545625}
+      state: 0
+      workbenchSpot: {fileID: 715670010004}
+  - name: Install the missing GPU
+    instructions: "Install the GPU from the workbench.\nReassemble the PC and use Test PC."
+    issues:
+    - socket: {fileID: 143719547}
+      state: 1
+      workbenchSpot: {fileID: 715670010002}
+  - name: Replace faulty RAM and GPU
+    instructions: "Use the spare RAM and GPU on the workbench.\nReassemble the PC and use Test PC."
+    issues:
+    - socket: {fileID: 1183826427}
+      state: 0
+      workbenchSpot: {fileID: 0}
+    - socket: {fileID: 143719547}
+      state: 0
+      workbenchSpot: {fileID: 715670010002}
 --- !u!23 &265861013
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2787,10 +2822,6 @@ PrefabInstance:
     - target: {fileID: 7161886979782904767, guid: a45836fb1524be3409f77549fe4504b7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7788013809603177444, guid: a45836fb1524be3409f77549fe4504b7, type: 3}
-      propertyPath: condition
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7278,6 +7309,68 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -4395893103218671587, guid: 1f671b89330e47379bb353ce3699e2f2, type: 3}
+--- !u!1 &715670010001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 715670010002}
+  m_Layer: 0
+  m_Name: GPU Workbench Spot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &715670010002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 715670010001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.41, y: 0.83, z: -0.61}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &715670010003
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 715670010004}
+  m_Layer: 0
+  m_Name: CPU Workbench Spot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &715670010004
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 715670010003}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: -3.32, y: 0.81, z: -0.23}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -7290,3 +7383,5 @@ SceneRoots:
   - {fileID: 741551362}
   - {fileID: 753753998}
   - {fileID: 265861016}
+  - {fileID: 715670010002}
+  - {fileID: 715670010004}

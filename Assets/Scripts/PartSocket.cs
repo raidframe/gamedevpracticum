@@ -26,6 +26,8 @@ namespace ComputerRepairKiosk
         public string DisplayName => displayName;
         public Collider[] RemovalColliders => removalColliders;
         public bool RequirementMet => requiredSocket == null || requiredSocket.Occupant != null;
+        internal PhysicalPart InitialPart => initialPart;
+        internal void ClearInitialPart() => initialPart = null;
 
         private void Start()
         {

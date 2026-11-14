@@ -3,9 +3,27 @@ using UnityEngine;
 
 namespace ComputerRepairKiosk
 {
+    // Apply the selected setup before PartSocket.Start seats the initial parts.
+    [DefaultExecutionOrder(-10)]
     public sealed class RepairScenario : MonoBehaviour
     {
         [SerializeField] private PartSocket[] requiredSockets = new PartSocket[0];
+        [SerializeField, Min(0), Tooltip("Zero-based index in Scenarios. Changes take effect when Play Mode starts.")]
+        private int scenarioIndex;
+        [SerializeField] private RepairSetup[] scenarios = System.Array.Empty<RepairSetup>();
+        private RepairSetup activeSetup;
+
+        internal string ObjectiveTitle => activeSetup?.Name ?? "Repair the PC";
+        internal string ObjectiveInstructions => activeSetup?.Instructions ?? "Check the PC and replace any missing or faulty parts.\nUse Test PC to verify the repair.";
+
+        private void Start()
+        {
+            if (scenarios.Length == 0) return;
+            int index = Mathf.Clamp(scenarioIndex, 0, scenarios.Length - 1);
+            activeSetup = scenarios[index];
+            activeSetup?.Apply(requiredSockets);
+        }
+
         internal readonly struct SocketResult
         {
             public readonly PartSocket Socket;

@@ -310,9 +310,8 @@ namespace ComputerRepairKiosk
             if (repairScenario == null || !repairScenario.isActiveAndEnabled) return;
             float width = Mathf.Min(360, Screen.width - 24);
             float innerWidth = width - 28;
-            string title = repairScenario.IsComplete ? "Repair complete" : "Job: Replace faulty RAM";
-            string instructions = repairScenario.IsComplete ? "The PC passed all checks." :
-                "Use the spare RAM on the workbench.\nReassemble the PC and use Test PC.";
+            string title = repairScenario.IsComplete ? "Repair complete" : repairScenario.ObjectiveTitle;
+            string instructions = repairScenario.IsComplete ? "The PC passed all checks." : repairScenario.ObjectiveInstructions;
             float titleHeight = nameStyle.CalcHeight(new GUIContent(title), innerWidth);
             float instructionsHeight = descriptionStyle.CalcHeight(new GUIContent(instructions), innerWidth);
             string result = repairScenario.IsComplete ? "" : repairScenario.ResultMessage;

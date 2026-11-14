@@ -100,6 +100,17 @@ namespace ComputerRepairKiosk
             RestoreRemovalCollisions(true);
         }
 
+        internal void PlaceLooseAtStart(Transform spot)
+        {
+            transform.SetParent(null, true);
+            transform.SetPositionAndRotation(spot.position, spot.rotation);
+            Body.position = spot.position;
+            Body.rotation = spot.rotation;
+            Body.isKinematic = false;
+            Body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            Body.useGravity = true;
+        }
+
         private void RestoreRemovalCollisions(bool force = false)
         {
             if (removalColliders == null) return;
