@@ -19,6 +19,7 @@ namespace ComputerRepairKiosk
         internal bool IsInspecting => inspection != null;
         public bool CanPickUp => isActiveAndEnabled && !IsHeld && (Socket == null || Socket.AllowRemoval);
         public Rigidbody Body => body != null ? body : body = GetComponent<Rigidbody>();
+        internal Collider[] SolidColliders => ownColliders ??= GetOwnColliders();
 
         private void Awake()
         {
@@ -32,7 +33,7 @@ namespace ComputerRepairKiosk
             if (!CanPickUp) return false;
             if (Socket != null)
             {
-                removalColliders = Socket.RemovalColliders == null ? null : (Collider[])Socket.RemovalColliders.Clone();
+                removalColliders = Socket.GetRemovalColliders();
                 if (removalColliders != null)
                     foreach (var a in ownColliders)
                         foreach (var b in removalColliders)

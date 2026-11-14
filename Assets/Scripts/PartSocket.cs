@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ComputerRepairKiosk
@@ -12,6 +13,9 @@ namespace ComputerRepairKiosk
         [SerializeField] private Collider[] removalColliders;
         [SerializeField] private PartSocket requiredSocket;
         [SerializeField] private PartSocket[] removalBlockers = new PartSocket[0];
+        [SerializeField] private PartSocket[] carriedSockets = new PartSocket[0];
+        [SerializeField] private bool ignoreInstalledPartsOnRemoval = true;
+        private IReadOnlyList<PartSocket> assemblySockets;
         public PhysicalPart Occupant { get; private set; }
         public bool AllowRemoval => allowRemoval && RemovalBlocker == null;
         public PartSocket RemovalBlocker
@@ -24,18 +28,33 @@ namespace ComputerRepairKiosk
             }
         }
         public string DisplayName => displayName;
-        public Collider[] RemovalColliders => removalColliders;
         public bool RequirementMet => requiredSocket == null || requiredSocket.Occupant != null;
         internal PhysicalPart InitialPart => initialPart;
         internal void ClearInitialPart() => initialPart = null;
+        internal void SetAssembly(IReadOnlyList<PartSocket> sockets) => assemblySockets = sockets;
+
+        internal Collider[] GetRemovalColliders()
+        {
+            var colliders = new List<Collider>();
+            if (removalColliders != null) colliders.AddRange(removalColliders);
+            if (ignoreInstalledPartsOnRemoval && assemblySockets != null)
+            {
+                foreach (var socket in assemblySockets)
+                {
+                    if (socket == null || socket == this || socket.Occupant == null) continue;
+                    colliders.AddRange(socket.Occupant.SolidColliders);
+                }
+            }
+            return colliders.ToArray();
+        }
 
         private void Start()
         {
             if (initialPart != null && Accepts(initialPart))
             {
-                Occupant = initialPart;
-                initialPart.Seat(this, transform);
+                Install(initialPart);
             }
+            else UpdateCarriedSockets();
         }
 
         public bool Accepts(PhysicalPart part) => isActiveAndEnabled && Occupant == null &&
@@ -47,14 +66,33 @@ namespace ComputerRepairKiosk
         public bool TryInstall(PhysicalPart part)
         {
             if (!CanInstall(part)) return false;
-            Occupant = part;
-            part.Seat(this, transform);
+            Install(part);
             return true;
         }
 
         internal void Detach(PhysicalPart part)
         {
-            if (Occupant == part) Occupant = null;
+            if (Occupant != part) return;
+            Occupant = null;
+            UpdateCarriedSockets();
+        }
+
+        private void Install(PhysicalPart part)
+        {
+            Occupant = part;
+            part.Seat(this, transform);
+            UpdateCarriedSockets();
+        }
+
+        private void UpdateCarriedSockets()
+        {
+            // Keep the authored local pose relative to the installed board or its mount.
+            foreach (var socket in carriedSockets)
+            {
+                if (socket == null) continue;
+                socket.transform.SetParent(Occupant != null ? Occupant.transform : transform, false);
+                socket.gameObject.SetActive(Occupant != null);
+            }
         }
     }
 }

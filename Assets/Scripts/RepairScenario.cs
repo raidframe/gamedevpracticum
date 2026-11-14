@@ -18,6 +18,9 @@ namespace ComputerRepairKiosk
 
         private void Start()
         {
+            foreach (var socket in requiredSockets)
+                if (socket != null) socket.SetAssembly(requiredSockets);
+
             if (scenarios.Length == 0) return;
             int index = Mathf.Clamp(scenarioIndex, 0, scenarios.Length - 1);
             activeSetup = scenarios[index];

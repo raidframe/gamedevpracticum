@@ -35,8 +35,10 @@ namespace ComputerRepairKiosk
         {
             [SerializeField] private PartSocket socket;
             [SerializeField] private StartingState state;
-            [SerializeField, Tooltip("For Faulty, optionally place a working spare here. For Missing, place the original component here.")]
+            [SerializeField, Tooltip("For Missing, place the original component here.")]
             private Transform workbenchSpot;
+            [SerializeField, Tooltip("For Faulty, optionally enable a compatible, inactive scene spare.")]
+            private PhysicalPart spare;
 
             public PartSocket Socket => socket;
 
@@ -64,18 +66,16 @@ namespace ComputerRepairKiosk
                 }
 
                 information.SetCondition(ComponentCondition.Faulty);
-                if (workbenchSpot == null) return;
-                if (part.GetComponentInChildren<PartSocket>(true) != null)
+                if (spare == null) return;
+                if (spare == part || spare.gameObject.activeInHierarchy || spare.CompatibilityId != part.CompatibilityId ||
+                    !spare.TryGetComponent<ComponentInformation>(out var spareInformation))
                 {
-                    Debug.LogWarning("Place a separate spare in the scene for parts that contain sockets.", part);
+                    Debug.LogWarning("Assign an inactive compatible spare with Component Information.", socket);
                     return;
                 }
 
-                var spare = UnityEngine.Object.Instantiate(part, workbenchSpot.position, workbenchSpot.rotation);
-                spare.transform.localScale = part.transform.lossyScale;
-                spare.name = part.DisplayName + " Spare";
-                spare.GetComponent<ComponentInformation>().SetCondition(ComponentCondition.Working);
-                spare.PlaceLooseAtStart(workbenchSpot);
+                spareInformation.SetCondition(ComponentCondition.Working);
+                spare.gameObject.SetActive(true);
             }
         }
     }
