@@ -109,7 +109,7 @@ namespace ComputerRepairKiosk
                 else status = "Installed / Working";
                 var statusLabel = AddLabel("Status", row, status, 16);
                 Stretch(statusLabel.rectTransform, .34f, 1, 8);
-                statusLabel.color = slot.Installed && !faulty ? Working : Warning;
+                statusLabel.color = slot.IsWorking ? Working : Warning;
             }
 
             root.SetActive(true);
@@ -128,7 +128,7 @@ namespace ComputerRepairKiosk
         public void RefreshSummary()
         {
             if (scenario == null) return;
-            summary.text = scenario.IsComplete ? "Repair Complete" : scenario.ResultMessage;
+            summary.text = scenario.ResultMessage;
             summary.color = scenario.IsComplete ? Working : Warning;
         }
 

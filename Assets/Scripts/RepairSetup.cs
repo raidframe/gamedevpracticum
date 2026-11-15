@@ -10,11 +10,33 @@ namespace ComputerRepairKiosk
         [SerializeField] private string name = "New repair";
         [SerializeField, TextArea] private string instructions = "";
         [SerializeField] private StartingIssue[] issues = Array.Empty<StartingIssue>();
+        [SerializeField] private ObjectiveStep[] objectiveSteps = Array.Empty<ObjectiveStep>();
 
         public string Name => name;
         public string Instructions => instructions;
+        public IReadOnlyList<ObjectiveStep> ObjectiveSteps => objectiveSteps;
 
-        public void Apply(IReadOnlyList<PartSocket> requiredSockets)
+        internal enum StepCondition
+        {
+            FaultyPartRemoved = 0,
+            WorkingPartInstalled = 1,
+            DiagnosticsPassed = 2
+        }
+
+        [Serializable]
+        internal struct ObjectiveStep
+        {
+            [SerializeField, TextArea(1, 3)] private string description;
+            [SerializeField] private StepCondition completionCondition;
+            [SerializeField, Tooltip("Choose the relevant socket for a component step. Leave this empty for Diagnostics Passed.")]
+            private PartSocket socket;
+
+            public string Description => description;
+            public StepCondition CompletionCondition => completionCondition;
+            public PartSocket Socket => socket;
+        }
+
+        public void Apply(IReadOnlyList<PartSocket> requiredSockets, Dictionary<PartSocket, PhysicalPart> startingFaults)
         {
             var pending = new HashSet<PartSocket>(requiredSockets);
             foreach (var issue in issues)
@@ -24,7 +46,7 @@ namespace ComputerRepairKiosk
                     Debug.LogWarning($"Repair setup '{name}' has an unassigned, duplicate or non-required socket.");
                     continue;
                 }
-                issue.Apply();
+                issue.Apply(startingFaults);
             }
         }
 
@@ -42,23 +64,26 @@ namespace ComputerRepairKiosk
 
             public PartSocket Socket => socket;
 
-            public void Apply()
+            public void Apply(Dictionary<PartSocket, PhysicalPart> startingFaults)
             {
                 var part = socket.InitialPart;
-                if (part == null) return;
 
                 if (state == StartingState.Missing)
                 {
-                    if (workbenchSpot == null)
+                    if (part != null)
                     {
-                        Debug.LogWarning("Assign a workbench spot for the missing component.", socket);
-                        return;
+                        if (workbenchSpot == null)
+                        {
+                            Debug.LogWarning("Assign a workbench spot for the missing component.", socket);
+                            return;
+                        }
+                        socket.ClearInitialPart();
+                        part.PlaceLooseAtStart(workbenchSpot);
                     }
-                    socket.ClearInitialPart();
-                    part.PlaceLooseAtStart(workbenchSpot);
                     return;
                 }
 
+                if (part == null) return;
                 if (!part.TryGetComponent<ComponentInformation>(out var information))
                 {
                     Debug.LogWarning("A faulty component needs Component Information.", part);
@@ -66,6 +91,7 @@ namespace ComputerRepairKiosk
                 }
 
                 information.SetCondition(ComponentCondition.Faulty);
+                startingFaults.Add(socket, part);
                 if (spare == null) return;
                 if (spare == part || spare.gameObject.activeInHierarchy || spare.CompatibilityId != part.CompatibilityId ||
                     !spare.TryGetComponent<ComponentInformation>(out var spareInformation))

@@ -10,7 +10,6 @@ namespace ComputerRepairKiosk
         [SerializeField] private PhysicsGrabber grabber;
         [SerializeField, Min(0.1f)] private float interactionDistance = 2f;
         [SerializeField] private LayerMask raycastLayers = Physics.DefaultRaycastLayers;
-        [SerializeField] private RepairScenario repairScenario;
         private PhysicalPart targetPart;
         private PartSocket targetSocket;
         private RepairScenario targetTestStation;
@@ -25,6 +24,8 @@ namespace ComputerRepairKiosk
         private static readonly Color BlockedColor = new Color(.98f, .75f, .48f);
         private bool ControlsActive => Application.isFocused && Cursor.lockState == CursorLockMode.Locked;
         internal bool DiagnosticsOpen => diagnosticPanel != null && diagnosticPanel.IsOpen;
+        internal bool ShowRepairObjective => isActiveAndEnabled && ControlsActive && !DiagnosticsOpen &&
+            grabber != null && viewCamera != null && !grabber.IsInspecting;
 
         private void LateUpdate()
         {
@@ -216,7 +217,6 @@ namespace ComputerRepairKiosk
                 descriptionStyle.normal.textColor = new Color(.82f, .85f, .88f);
                 conditionStyle = new GUIStyle(GUI.skin.label) { fontSize = 15, alignment = TextAnchor.MiddleRight };
             }
-            if (!grabber.IsInspecting) DrawRepairObjective();
             var part = grabber.HeldPart != null ? grabber.HeldPart : targetPart;
             var information = part != null ? part.GetComponent<ComponentInformation>() : null;
             if (feedback.Action.Length == 0 && feedback.Hint.Length == 0 && part == null) return;
@@ -305,29 +305,5 @@ namespace ComputerRepairKiosk
             GUI.DrawTexture(new Rect(x, y + Mathf.Min(0, vertical), thickness, Mathf.Abs(vertical) + thickness), Texture2D.whiteTexture);
         }
 
-        private void DrawRepairObjective()
-        {
-            if (repairScenario == null || !repairScenario.isActiveAndEnabled) return;
-            float width = Mathf.Min(360, Screen.width - 24);
-            float innerWidth = width - 28;
-            string title = repairScenario.IsComplete ? "Repair complete" : repairScenario.ObjectiveTitle;
-            string instructions = repairScenario.IsComplete ? "The PC passed all checks." : repairScenario.ObjectiveInstructions;
-            float titleHeight = nameStyle.CalcHeight(new GUIContent(title), innerWidth);
-            float instructionsHeight = descriptionStyle.CalcHeight(new GUIContent(instructions), innerWidth);
-            string result = repairScenario.IsComplete ? "" : repairScenario.ResultMessage;
-            float resultHeight = result.Length > 0 ? descriptionStyle.CalcHeight(new GUIContent(result), innerWidth) + 12 : 0;
-            Rect panel = new Rect(12, 12, width, 28 + titleHeight + instructionsHeight + resultHeight);
-            Color previous = GUI.color;
-            GUI.color = new Color(.045f, .055f, .065f, .95f);
-            GUI.DrawTexture(panel, Texture2D.whiteTexture);
-            GUI.color = previous;
-            GUI.Label(new Rect(26, 24, innerWidth, titleHeight), title, nameStyle);
-            float y = 28 + titleHeight;
-            GUI.Label(new Rect(26, y, innerWidth, instructionsHeight), instructions, descriptionStyle);
-            if (resultHeight == 0) return;
-            GUI.color = repairScenario.IsComplete ? new Color(.6f, .92f, .7f) : new Color(1, .78f, .6f);
-            GUI.Label(new Rect(26, y + instructionsHeight + 12, innerWidth, resultHeight), result, descriptionStyle);
-            GUI.color = previous;
-        }
     }
 }
